@@ -1,15 +1,14 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="SPOT DOG OS - Sergio", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="SPOT DOG OS - IoT", layout="wide", initial_sidebar_state="collapsed")
 
-# Eliminar márgenes y barra superior de Streamlit para que no corte el recuadro
 st.markdown("""
     <style>
         header[data-testid="stHeader"] { display: none; }
         .block-container {
-            padding-top: 0.5rem !important;
-            padding-bottom: 0.5rem !important;
+            padding-top: 0.4rem !important;
+            padding-bottom: 0.4rem !important;
             max-width: 760px !important;
         }
         body, .stApp { background-color: #0b0e14; color: white; }
@@ -21,6 +20,8 @@ html_code = """
 <!DOCTYPE html>
 <html>
 <head>
+<!-- Librería oficial MQTT para IoT en tiempo real -->
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <style>
     * { box-sizing: border-box; }
     body {
@@ -29,35 +30,33 @@ html_code = """
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         text-align: center;
         margin: 0;
-        padding: 18px 20px;
+        padding: 16px 18px;
         border-radius: 14px;
         border: 1px solid #2d3748;
         user-select: none;
     }
-    h1 {
-        letter-spacing: 3px;
-        font-size: 22px;
-        margin: 0 0 12px 0;
-        color: #e2e8f0;
-    }
+    h1 { letter-spacing: 3px; font-size: 21px; margin: 0 0 10px 0; color: #e2e8f0; }
     
-    .ip-bar {
+    .conn-bar {
         margin-bottom: 12px;
         display: flex;
         justify-content: center;
         gap: 8px;
         align-items: center;
+        flex-wrap: wrap;
+        background: rgba(0,0,0,0.3);
+        padding: 8px;
+        border-radius: 8px;
+        border: 1px solid #2d3748;
     }
-    .ip-bar input {
+    select, input {
         background: #1a202c;
         border: 1px solid #4a5568;
         color: #00e5ff;
-        padding: 7px 12px;
+        padding: 6px 10px;
         border-radius: 6px;
-        text-align: center;
         font-family: monospace;
-        font-size: 14px;
-        width: 170px;
+        font-size: 13px;
     }
 
     .status-bar {
@@ -66,7 +65,7 @@ html_code = """
         border-top: 1px solid #2d3748;
         border-bottom: 1px solid #2d3748;
         padding: 8px 0;
-        margin-bottom: 14px;
+        margin-bottom: 12px;
     }
     .metric-label { font-size: 10px; color: #a0aec0; letter-spacing: 1px; }
     .metric-val { font-size: 14px; font-weight: bold; color: #00e5ff; margin-top: 2px; }
@@ -75,7 +74,7 @@ html_code = """
         font-size: 10px;
         color: #718096;
         letter-spacing: 1.5px;
-        margin: 8px 0 6px 0;
+        margin: 6px 0 6px 0;
         text-transform: uppercase;
     }
 
@@ -89,11 +88,10 @@ html_code = """
         background: rgba(255, 255, 255, 0.05);
         border: 1px solid rgba(255, 255, 255, 0.18);
         color: white;
-        padding: 9px 6px;
+        padding: 8px 6px;
         border-radius: 8px;
         font-weight: bold;
         font-size: 11px;
-        letter-spacing: 0.5px;
         cursor: pointer;
         transition: all 0.15s;
         display: flex;
@@ -120,7 +118,6 @@ html_code = """
     }
     .btn-auto { border-color: #48bb78; color: #9ae6b4; }
 
-    /* Etiquetas de botones de PS4 */
     .ps-badge {
         font-size: 10px;
         padding: 2px 6px;
@@ -135,18 +132,17 @@ html_code = """
     .ps-square { color: #f687b3; border-color: #f687b355; }
     .ps-triangle { color: #68d391; border-color: #68d39155; }
 
-    /* Joysticks */
     .joysticks-container {
         display: flex;
         justify-content: space-around;
         align-items: center;
-        margin: 14px 0 12px 0;
+        margin: 12px 0 10px 0;
     }
     .joy-wrapper { display: flex; flex-direction: column; align-items: center; }
     .joy-label { font-size: 11px; color: #a0aec0; margin-bottom: 6px; }
     .joystick-zone {
-        width: 130px;
-        height: 130px;
+        width: 126px;
+        height: 126px;
         border: 2px solid rgba(0, 229, 255, 0.45);
         border-radius: 50%;
         position: relative;
@@ -154,19 +150,19 @@ html_code = """
         touch-action: none;
     }
     .stick {
-        width: 42px;
-        height: 42px;
+        width: 40px;
+        height: 40px;
         background: #00e5ff;
         border-radius: 50%;
         position: absolute;
-        top: 42px;
-        left: 42px;
+        top: 41px;
+        left: 41px;
         box-shadow: 0 0 16px #00e5ff;
         cursor: grab;
     }
     .gamepad-bar {
-        margin-top: 8px;
-        padding: 8px 12px;
+        margin-top: 6px;
+        padding: 7px 10px;
         background: rgba(0, 0, 0, 0.35);
         border: 1px solid #2d3748;
         border-radius: 6px;
@@ -177,11 +173,16 @@ html_code = """
 </head>
 <body>
 
-    <h1>SPOT DOG OS</h1>
+    <h1>SPOT DOG OS <span style="font-size:12px; color:#00e5ff;">IoT CLOUD</span></h1>
 
-    <div class="ip-bar">
-        <input type="text" id="esp-ip" value="192.168.4.1" placeholder="IP o sergio.local">
-        <button class="btn" style="flex-direction:row; padding: 8px 14px;" onclick="checkStatus()">CONECTAR</button>
+    <!-- Selector de Modo: Nube IoT (4G / Cualquier Wi-Fi) o IP Local Directa -->
+    <div class="conn-bar">
+        <select id="conn-mode" onchange="toggleMode()">
+            <option value="iot">🌐 Modo IoT Cloud (Datos Móviles / Cualquier Wi-Fi)</option>
+            <option value="lan">📡 Modo Local Directo (Mismo Wi-Fi / AP del Perro)</option>
+        </select>
+        <input type="text" id="robot-id" value="spotdog_sergio_chubut" placeholder="ID del Perro" style="width:175px;">
+        <input type="text" id="esp-ip" value="192.168.4.1" placeholder="IP Local" style="width:130px; display:none;">
     </div>
 
     <div class="status-bar">
@@ -198,8 +199,8 @@ html_code = """
             <div class="metric-val" id="st-imu">0° / 0°</div>
         </div>
         <div>
-            <div class="metric-label">PING</div>
-            <div class="metric-val" id="st-ping" style="color:#f56565;">OFF</div>
+            <div class="metric-label">CONEXIÓN</div>
+            <div class="metric-val" id="st-ping" style="color:#ecc94b;">CONECTANDO...</div>
         </div>
     </div>
 
@@ -276,11 +277,57 @@ html_code = """
 
 <script>
     let moveState = { vx: 0, vy: 0, wz: 0 };
-    const maxDist = 44;
+    const maxDist = 42;
+    let mqttClient = null;
 
-    function getBaseUrl() {
-        const ip = document.getElementById('esp-ip').value.trim();
-        return ip.startsWith('http') ? ip : `http://${ip}`;
+    function getTopicPrefix() {
+        return "spotdog/" + document.getElementById('robot-id').value.trim();
+    }
+
+    // --- CONEXIÓN AL BROKER IoT (Funciona con Datos Móviles 4G/5G y cualquier Wi-Fi) ---
+    function initMQTT() {
+        const pingEl = document.getElementById('st-ping');
+        // Broker público gratuito sobre WebSockets Seguros (WSS)
+        mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+
+        mqttClient.on('connect', () => {
+            pingEl.innerText = "ONLINE (IoT)";
+            pingEl.style.color = "#48bb78";
+            mqttClient.subscribe(getTopicPrefix() + "/status");
+        });
+
+        mqttClient.on('message', (topic, message) => {
+            try {
+                const data = JSON.parse(message.toString());
+                if (data.mode) document.getElementById('st-mode').innerText = data.mode.toUpperCase();
+                if (data.roll !== undefined) {
+                    document.getElementById('st-imu').innerText = `${Math.round(data.roll)}° / ${Math.round(data.pitch)}°`;
+                }
+            } catch (e) {}
+        });
+
+        mqttClient.on('offline', () => {
+            if (document.getElementById('conn-mode').value === 'iot') {
+                pingEl.innerText = "RECONECTANDO";
+                pingEl.style.color = "#f56565";
+            }
+        });
+    }
+
+    initMQTT();
+
+    function toggleMode() {
+        const mode = document.getElementById('conn-mode').value;
+        document.getElementById('robot-id').style.display = (mode === 'iot') ? 'inline-block' : 'none';
+        document.getElementById('esp-ip').style.display = (mode === 'lan') ? 'inline-block' : 'none';
+        const pingEl = document.getElementById('st-ping');
+        if (mode === 'lan') {
+            pingEl.innerText = "MODO LAN";
+            pingEl.style.color = "#00e5ff";
+        } else if (mqttClient && mqttClient.connected) {
+            pingEl.innerText = "ONLINE (IoT)";
+            pingEl.style.color = "#48bb78";
+        }
     }
 
     function flashButton(cmd) {
@@ -291,39 +338,35 @@ html_code = """
         }
     }
 
+    // Enviar Acción (Por IoT Cloud o por IP Local)
     async function sendAct(cmd) {
         document.getElementById('st-mode').innerText = cmd.toUpperCase();
         flashButton(cmd);
-        const base = getBaseUrl();
-        try {
-            await fetch(`${base}/r/act?cmd=${cmd}&act=${cmd}`, { method: 'GET', mode: 'no-cors' });
-        } catch (e) {}
+        const mode = document.getElementById('conn-mode').value;
+
+        if (mode === 'iot' && mqttClient && mqttClient.connected) {
+            mqttClient.publish(getTopicPrefix() + "/cmd", JSON.stringify({ type: "act", cmd: cmd }));
+        } else {
+            const ip = document.getElementById('esp-ip').value.trim();
+            const base = ip.startsWith('http') ? ip : `http://${ip}`;
+            try { await fetch(`${base}/r/act?cmd=${cmd}&act=${cmd}`, { method: 'GET', mode: 'no-cors' }); } catch (e) {}
+        }
     }
 
+    // Enviar Movimiento (Por IoT Cloud o por IP Local)
     async function sendMove(vx, vy, wz) {
-        const base = getBaseUrl();
-        try {
-            await fetch(`${base}/r/move?vx=${vx}&vy=${vy}&wz=${wz}&x=${vx}&y=${vy}&turn=${wz}`, {
-                method: 'GET', mode: 'no-cors'
-            });
-        } catch (e) {}
-    }
+        const mode = document.getElementById('conn-mode').value;
 
-    async function checkStatus() {
-        const base = getBaseUrl();
-        const pingEl = document.getElementById('st-ping');
-        const t0 = performance.now();
-        try {
-            const res = await fetch(`${base}/r/status`);
-            const data = await res.json();
-            const dt = Math.round(performance.now() - t0);
-            pingEl.innerText = dt + " ms";
-            pingEl.style.color = "#48bb78";
-            if (data.mode || data.state) document.getElementById('st-mode').innerText = (data.mode || data.state).toUpperCase();
-            if (data.roll !== undefined) document.getElementById('st-imu').innerText = `${Math.round(data.roll)}° / ${Math.round(data.pitch)}°`;
-        } catch (e) {
-            pingEl.innerText = "LISTO (LAN)";
-            pingEl.style.color = "#ecc94b";
+        if (mode === 'iot' && mqttClient && mqttClient.connected) {
+            mqttClient.publish(getTopicPrefix() + "/cmd", JSON.stringify({ type: "move", vx: vx, vy: vy, wz: wz }));
+        } else {
+            const ip = document.getElementById('esp-ip').value.trim();
+            const base = ip.startsWith('http') ? ip : `http://${ip}`;
+            try {
+                await fetch(`${base}/r/move?vx=${vx}&vy=${vy}&wz=${wz}&x=${vx}&y=${vy}&turn=${wz}`, {
+                    method: 'GET', mode: 'no-cors'
+                });
+            } catch (e) {}
         }
     }
 
@@ -395,17 +438,17 @@ html_code = """
             document.getElementById('stick-left').style.transform = `translate(${lx * maxDist}px, ${-ly * maxDist}px)`;
             document.getElementById('stick-right').style.transform = `translate(${rx * maxDist}px, 0px)`;
 
-            if (btnJustPressed(gp, 0)) sendAct('stand');   // Cruz (X)
-            if (btnJustPressed(gp, 1)) sendAct('sit');     // Círculo
-            if (btnJustPressed(gp, 2)) sendAct('lie');     // Cuadrado
-            if (btnJustPressed(gp, 3)) sendAct('auto');    // Triángulo
-            if (btnJustPressed(gp, 4)) sendAct('wave');    // L1
-            if (btnJustPressed(gp, 5)) sendAct('dance');   // R1
-            if (btnJustPressed(gp, 8)) sendAct('relax');   // Share
-            if (btnJustPressed(gp, 9)) sendAct('stop');    // Options
-            if (btnJustPressed(gp, 12)) sendAct('bow');    // D-Pad Arriba
-            if (btnJustPressed(gp, 13)) sendAct('wiggle'); // D-Pad Abajo
-            if (btnJustPressed(gp, 14)) sendAct('shake');  // D-Pad Izq
+            if (btnJustPressed(gp, 0)) sendAct('stand');
+            if (btnJustPressed(gp, 1)) sendAct('sit');
+            if (btnJustPressed(gp, 2)) sendAct('lie');
+            if (btnJustPressed(gp, 3)) sendAct('auto');
+            if (btnJustPressed(gp, 4)) sendAct('wave');
+            if (btnJustPressed(gp, 5)) sendAct('dance');
+            if (btnJustPressed(gp, 8)) sendAct('relax');
+            if (btnJustPressed(gp, 9)) sendAct('stop');
+            if (btnJustPressed(gp, 12)) sendAct('bow');
+            if (btnJustPressed(gp, 13)) sendAct('wiggle');
+            if (btnJustPressed(gp, 14)) sendAct('shake');
         }
         requestAnimationFrame(pollGamepad);
     }
@@ -414,4 +457,4 @@ html_code = """
 </html>
 """
 
-components.html(html_code, height=650, scrolling=False)
+components.html(html_code, height=660, scrolling=False)
