@@ -1,12 +1,19 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="SPOT DOG OS - Sergio", layout="centered", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="SPOT DOG OS - Sergio", layout="wide", initial_sidebar_state="collapsed")
 
+# Eliminar márgenes y barra superior de Streamlit para que no corte el recuadro
 st.markdown("""
     <style>
-        .block-container { padding-top: 0.8rem; padding-bottom: 0rem; max-width: 750px; }
-        body { background-color: #0d1015; color: white; }
+        header[data-testid="stHeader"] { display: none; }
+        .block-container {
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+            max-width: 760px !important;
+        }
+        body, .stApp { background-color: #0b0e14; color: white; }
+        iframe { border: none; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -15,73 +22,156 @@ html_code = """
 <html>
 <head>
 <style>
+    * { box-sizing: border-box; }
     body {
         background: radial-gradient(circle at top, #1e2530, #0d1015);
         color: #ffffff;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         text-align: center;
         margin: 0;
-        padding: 15px;
-        border-radius: 12px;
+        padding: 18px 20px;
+        border-radius: 14px;
+        border: 1px solid #2d3748;
         user-select: none;
     }
-    h1 { letter-spacing: 3px; font-size: 24px; margin: 5px 0 12px 0; color: #e2e8f0; }
+    h1 {
+        letter-spacing: 3px;
+        font-size: 22px;
+        margin: 0 0 12px 0;
+        color: #e2e8f0;
+    }
     
-    .ip-bar { margin-bottom: 15px; display: flex; justify-content: center; gap: 8px; align-items: center; }
+    .ip-bar {
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        align-items: center;
+    }
     .ip-bar input {
-        background: #1a202c; border: 1px solid #4a5568; color: #00e5ff;
-        padding: 7px 10px; border-radius: 6px; text-align: center; font-family: monospace; width: 150px;
+        background: #1a202c;
+        border: 1px solid #4a5568;
+        color: #00e5ff;
+        padding: 7px 12px;
+        border-radius: 6px;
+        text-align: center;
+        font-family: monospace;
+        font-size: 14px;
+        width: 170px;
     }
 
     .status-bar {
-        display: flex; justify-content: space-around;
-        border-top: 1px solid #2d3748; border-bottom: 1px solid #2d3748;
-        padding: 10px 0; margin-bottom: 18px;
+        display: flex;
+        justify-content: space-around;
+        border-top: 1px solid #2d3748;
+        border-bottom: 1px solid #2d3748;
+        padding: 8px 0;
+        margin-bottom: 14px;
     }
     .metric-label { font-size: 10px; color: #a0aec0; letter-spacing: 1px; }
-    .metric-val { font-size: 15px; font-weight: bold; color: #00e5ff; margin-top: 3px; }
+    .metric-val { font-size: 14px; font-weight: bold; color: #00e5ff; margin-top: 2px; }
 
-    .section-title { font-size: 11px; color: #718096; letter-spacing: 1.5px; margin: 10px 0 6px 0; text-transform: uppercase; }
+    .section-title {
+        font-size: 10px;
+        color: #718096;
+        letter-spacing: 1.5px;
+        margin: 8px 0 6px 0;
+        text-transform: uppercase;
+    }
 
     .btn-grid {
-        display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-bottom: 10px;
     }
     .btn {
-        background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.2);
-        color: white; padding: 10px 6px; border-radius: 7px; font-weight: bold;
-        font-size: 11px; letter-spacing: 0.8px; cursor: pointer; transition: 0.15s;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: white;
+        padding: 9px 6px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 11px;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: all 0.15s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
     }
-    .btn:hover, .btn:active {
-        background: rgba(0, 229, 255, 0.2); border-color: #00e5ff;
-        box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+    .btn:hover, .btn.active-btn {
+        background: rgba(0, 229, 255, 0.22);
+        border-color: #00e5ff;
+        box-shadow: 0 0 12px rgba(0, 229, 255, 0.45);
+        transform: scale(0.98);
     }
     .btn-stop {
-        background: rgba(245, 101, 101, 0.2); border-color: #f56565; color: #feb2b2;
+        background: rgba(245, 101, 101, 0.15);
+        border-color: #f56565;
+        color: #feb2b2;
         grid-column: span 2;
     }
-    .btn-stop:hover { background: rgba(245, 101, 101, 0.45); box-shadow: 0 0 12px rgba(245, 101, 101, 0.6); }
+    .btn-stop:hover, .btn-stop.active-btn {
+        background: rgba(245, 101, 101, 0.4);
+        box-shadow: 0 0 12px rgba(245, 101, 101, 0.6);
+    }
     .btn-auto { border-color: #48bb78; color: #9ae6b4; }
 
-    /* Doble Joystick */
+    /* Etiquetas de botones de PS4 */
+    .ps-badge {
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        font-family: monospace;
+        color: #cbd5e0;
+    }
+    .ps-cross { color: #63b3ed; border-color: #63b3ed55; }
+    .ps-circle { color: #fc8181; border-color: #fc818155; }
+    .ps-square { color: #f687b3; border-color: #f687b355; }
+    .ps-triangle { color: #68d391; border-color: #68d39155; }
+
+    /* Joysticks */
     .joysticks-container {
-        display: flex; justify-content: space-around; align-items: center; margin: 18px 0 10px 0;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        margin: 14px 0 12px 0;
     }
     .joy-wrapper { display: flex; flex-direction: column; align-items: center; }
     .joy-label { font-size: 11px; color: #a0aec0; margin-bottom: 6px; }
     .joystick-zone {
-        width: 140px; height: 140px; border: 2px solid rgba(0, 229, 255, 0.45);
-        border-radius: 50%; position: relative;
+        width: 130px;
+        height: 130px;
+        border: 2px solid rgba(0, 229, 255, 0.45);
+        border-radius: 50%;
+        position: relative;
         background: radial-gradient(circle, rgba(0,229,255,0.1) 0%, rgba(0,0,0,0.45) 100%);
         touch-action: none;
     }
     .stick {
-        width: 44px; height: 44px; background: #00e5ff; border-radius: 50%;
-        position: absolute; top: 48px; left: 48px; box-shadow: 0 0 18px #00e5ff;
+        width: 42px;
+        height: 42px;
+        background: #00e5ff;
+        border-radius: 50%;
+        position: absolute;
+        top: 42px;
+        left: 42px;
+        box-shadow: 0 0 16px #00e5ff;
         cursor: grab;
     }
     .gamepad-bar {
-        margin-top: 12px; padding: 8px; background: rgba(0,0,0,0.3);
-        border-radius: 6px; font-size: 12px; color: #a0aec0;
+        margin-top: 8px;
+        padding: 8px 12px;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid #2d3748;
+        border-radius: 6px;
+        font-size: 12px;
+        color: #a0aec0;
     }
 </style>
 </head>
@@ -91,7 +181,7 @@ html_code = """
 
     <div class="ip-bar">
         <input type="text" id="esp-ip" value="192.168.4.1" placeholder="IP o sergio.local">
-        <button class="btn" onclick="checkStatus()">CONECTAR</button>
+        <button class="btn" style="flex-direction:row; padding: 8px 14px;" onclick="checkStatus()">CONECTAR</button>
     </div>
 
     <div class="status-bar">
@@ -113,37 +203,67 @@ html_code = """
         </div>
     </div>
 
-    <!-- Posturas Principales y Modos (de tu diseño original + Sergio) -->
     <div class="section-title">Posturas y Modos</div>
     <div class="btn-grid">
-        <button class="btn" onclick="sendAct('stand')">DE PIE</button>
-        <button class="btn" onclick="sendAct('sit')">SENTADO</button>
-        <button class="btn" onclick="sendAct('lie')">ACOSTADO (REPOSO)</button>
-        <button class="btn btn-auto" onclick="sendAct('auto')">EXPLORAR (AUTO)</button>
+        <button class="btn" id="btn-stand" onclick="sendAct('stand')">
+            <span>DE PIE</span>
+            <span class="ps-badge ps-cross">✖ Cruz</span>
+        </button>
+        <button class="btn" id="btn-sit" onclick="sendAct('sit')">
+            <span>SENTADO</span>
+            <span class="ps-badge ps-circle">● Círculo</span>
+        </button>
+        <button class="btn" id="btn-lie" onclick="sendAct('lie')">
+            <span>ACOSTADO</span>
+            <span class="ps-badge ps-square">■ Cuadrado</span>
+        </button>
+        <button class="btn btn-auto" id="btn-auto" onclick="sendAct('auto')">
+            <span>EXPLORAR (AUTO)</span>
+            <span class="ps-badge ps-triangle">▲ Triángulo</span>
+        </button>
     </div>
 
-    <!-- Acciones y Animaciones -->
     <div class="section-title">Animaciones y Control</div>
     <div class="btn-grid">
-        <button class="btn" onclick="sendAct('wave')">SALUDAR</button>
-        <button class="btn" onclick="sendAct('shake')">PATITA</button>
-        <button class="btn" onclick="sendAct('dance')">BAILAR</button>
-        <button class="btn" onclick="sendAct('bow')">REVERENCIA</button>
-        <button class="btn" onclick="sendAct('wiggle')">MENEAR</button>
-        <button class="btn" onclick="sendAct('relax')">RELAJAR</button>
-        <button class="btn btn-stop" onclick="sendAct('stop')">🚨 STOP (KILL SERVOS)</button>
+        <button class="btn" id="btn-wave" onclick="sendAct('wave')">
+            <span>SALUDAR</span>
+            <span class="ps-badge">L1</span>
+        </button>
+        <button class="btn" id="btn-dance" onclick="sendAct('dance')">
+            <span>BAILAR</span>
+            <span class="ps-badge">R1</span>
+        </button>
+        <button class="btn" id="btn-shake" onclick="sendAct('shake')">
+            <span>PATITA</span>
+            <span class="ps-badge">⬅ D-Pad Izq</span>
+        </button>
+        <button class="btn" id="btn-bow" onclick="sendAct('bow')">
+            <span>REVERENCIA</span>
+            <span class="ps-badge">⬆ D-Pad Arr</span>
+        </button>
+        <button class="btn" id="btn-wiggle" onclick="sendAct('wiggle')">
+            <span>MENEAR</span>
+            <span class="ps-badge">⬇ D-Pad Abj</span>
+        </button>
+        <button class="btn" id="btn-relax" onclick="sendAct('relax')">
+            <span>RELAJAR</span>
+            <span class="ps-badge">SHARE</span>
+        </button>
+        <button class="btn btn-stop" id="btn-stop" onclick="sendAct('stop')">
+            <span>🚨 STOP (KILL SERVOS)</span>
+            <span class="ps-badge" style="color:#feb2b2; border-color:#f56565;">OPTIONS</span>
+        </button>
     </div>
 
-    <!-- Joysticks Izquierdo (Traslación) y Derecho (Giro) -->
     <div class="joysticks-container">
         <div class="joy-wrapper">
-            <div class="joy-label">AVANZAR / LATERAL (L-Stick)</div>
+            <div class="joy-label">AVANZAR / LATERAL (Stick Izq)</div>
             <div class="joystick-zone" id="zone-left">
                 <div class="stick" id="stick-left"></div>
             </div>
         </div>
         <div class="joy-wrapper">
-            <div class="joy-label">GIRAR (R-Stick)</div>
+            <div class="joy-label">GIRAR (Stick Der)</div>
             <div class="joystick-zone" id="zone-right">
                 <div class="stick" id="stick-right"></div>
             </div>
@@ -151,40 +271,44 @@ html_code = """
     </div>
 
     <div class="gamepad-bar" id="gp-status">
-        🎮 DualShock 4: Conectá el mando por Bluetooth/USB a tu PC o Celular y tocá un botón
+        🎮 DualShock 4: Conectá el mando y presioná cualquier botón
     </div>
 
 <script>
     let moveState = { vx: 0, vy: 0, wz: 0 };
-    const maxDist = 48;
+    const maxDist = 44;
 
     function getBaseUrl() {
         const ip = document.getElementById('esp-ip').value.trim();
         return ip.startsWith('http') ? ip : `http://${ip}`;
     }
 
-    // 1. Enviar acciones (/r/act y /r/voice como respaldo)
+    function flashButton(cmd) {
+        const btn = document.getElementById('btn-' + cmd);
+        if (btn) {
+            btn.classList.add('active-btn');
+            setTimeout(() => btn.classList.remove('active-btn'), 250);
+        }
+    }
+
     async function sendAct(cmd) {
         document.getElementById('st-mode').innerText = cmd.toUpperCase();
+        flashButton(cmd);
         const base = getBaseUrl();
         try {
-            // Llama al endpoint /r/act de SergioElPerro (pasando cmd tanto en query como JSON por compatibilidad)
             await fetch(`${base}/r/act?cmd=${cmd}&act=${cmd}`, { method: 'GET', mode: 'no-cors' });
         } catch (e) {}
     }
 
-    // 2. Enviar movimiento (/r/move)
     async function sendMove(vx, vy, wz) {
         const base = getBaseUrl();
         try {
-            // Envía velocidades X (adelante/atrás), Y (lateral) y Z/Yaw (giro)
             await fetch(`${base}/r/move?vx=${vx}&vy=${vy}&wz=${wz}&x=${vx}&y=${vy}&turn=${wz}`, {
                 method: 'GET', mode: 'no-cors'
             });
         } catch (e) {}
     }
 
-    // 3. Consultar telemetría (/r/status)
     async function checkStatus() {
         const base = getBaseUrl();
         const pingEl = document.getElementById('st-ping');
@@ -198,12 +322,11 @@ html_code = """
             if (data.mode || data.state) document.getElementById('st-mode').innerText = (data.mode || data.state).toUpperCase();
             if (data.roll !== undefined) document.getElementById('st-imu').innerText = `${Math.round(data.roll)}° / ${Math.round(data.pitch)}°`;
         } catch (e) {
-            pingEl.innerText = "ONLINE (NO-CORS)";
+            pingEl.innerText = "LISTO (LAN)";
             pingEl.style.color = "#ecc94b";
         }
     }
 
-    // Configurar Joysticks Táctiles
     function setupJoystick(zoneId, stickId, onMoveCallback) {
         const zone = document.getElementById(zoneId);
         const stick = document.getElementById(stickId);
@@ -229,7 +352,6 @@ html_code = """
             const py = Math.sin(angle) * dist;
             stick.style.transform = `translate(${px}px, ${py}px)`;
 
-            // Valores de -1.00 a 1.00
             const normX = +(px / maxDist).toFixed(2);
             const normY = +(-py / maxDist).toFixed(2);
             onMoveCallback(normX, normY);
@@ -239,14 +361,12 @@ html_code = """
     setupJoystick('zone-left', 'stick-left', (x, y) => { moveState.vy = x; moveState.vx = y; });
     setupJoystick('zone-right', 'stick-right', (x, y) => { moveState.wz = x; });
 
-    // Loop de envío cada 180 ms (Respeta el watchdog de 0,7s de SergioElPerro sin saturar el Wi-Fi)
     setInterval(() => {
         if (moveState.vx !== 0 || moveState.vy !== 0 || moveState.wz !== 0) {
             sendMove(moveState.vx, moveState.vy, moveState.wz);
         }
     }, 180);
 
-    // --- Integración DualShock 4 (Gamepad API) ---
     let lastBtn = {};
     window.addEventListener("gamepadconnected", (e) => {
         document.getElementById('gp-status').innerHTML = `🟢 <b>DualShock 4 Activo:</b> ${e.gamepad.id}`;
@@ -275,18 +395,17 @@ html_code = """
             document.getElementById('stick-left').style.transform = `translate(${lx * maxDist}px, ${-ly * maxDist}px)`;
             document.getElementById('stick-right').style.transform = `translate(${rx * maxDist}px, 0px)`;
 
-            // Mapeo de Botones de PS4 a las acciones de SergioElPerro
-            if (btnJustPressed(gp, 0)) sendAct('stand');   // Cruz (X) -> De pie
-            if (btnJustPressed(gp, 1)) sendAct('sit');     // Círculo -> Sentado
-            if (btnJustPressed(gp, 2)) sendAct('lie');     // Cuadrado -> Acostado
-            if (btnJustPressed(gp, 3)) sendAct('auto');    // Triángulo -> Modo Autónomo
-            if (btnJustPressed(gp, 4)) sendAct('wave');    // L1 -> Saludar
-            if (btnJustPressed(gp, 5)) sendAct('dance');   // R1 -> Bailar
-            if (btnJustPressed(gp, 8)) sendAct('relax');   // Share -> Relajar
-            if (btnJustPressed(gp, 9)) sendAct('stop');    // Options -> STOP Emergencia
-            if (btnJustPressed(gp, 12)) sendAct('bow');    // D-Pad Arriba -> Reverencia
-            if (btnJustPressed(gp, 13)) sendAct('wiggle'); // D-Pad Abajo -> Menear
-            if (btnJustPressed(gp, 14)) sendAct('shake');  // D-Pad Izq -> Patita
+            if (btnJustPressed(gp, 0)) sendAct('stand');   // Cruz (X)
+            if (btnJustPressed(gp, 1)) sendAct('sit');     // Círculo
+            if (btnJustPressed(gp, 2)) sendAct('lie');     // Cuadrado
+            if (btnJustPressed(gp, 3)) sendAct('auto');    // Triángulo
+            if (btnJustPressed(gp, 4)) sendAct('wave');    // L1
+            if (btnJustPressed(gp, 5)) sendAct('dance');   // R1
+            if (btnJustPressed(gp, 8)) sendAct('relax');   // Share
+            if (btnJustPressed(gp, 9)) sendAct('stop');    // Options
+            if (btnJustPressed(gp, 12)) sendAct('bow');    // D-Pad Arriba
+            if (btnJustPressed(gp, 13)) sendAct('wiggle'); // D-Pad Abajo
+            if (btnJustPressed(gp, 14)) sendAct('shake');  // D-Pad Izq
         }
         requestAnimationFrame(pollGamepad);
     }
@@ -295,4 +414,4 @@ html_code = """
 </html>
 """
 
-components.html(html_code, height=680)
+components.html(html_code, height=650, scrolling=False)
